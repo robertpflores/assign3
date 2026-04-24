@@ -1,82 +1,67 @@
 Chorus Lapilli Lab Notebook
-===========================
 
-Overview:
-- Starting from the completed tic-tac-toe game in src/App.jsx
-- Modifying it to implement chorus lapilli rules:
-  1. After each player has placed 3 pieces, they must move existing pieces
-     to adjacent empty squares instead of placing new ones
-  2. If your piece is in the center and you have 3 pieces, you must either
-     win or move the center piece out
+Starting from my working tic-tac-toe in App.jsx. Need to turn it into
+chorus lapilli — basically tic-tac-toe but after you place your 3 pieces
+you have to move them around instead of placing more. Also there's a rule
+about the center square.
 
-Step 1: Tracking Move Count
-- Replaced the history-based state with a simple moveCount state in Game
-- xIsNext is derived from moveCount % 2 === 0
-- Passed moveCount down to Board as a prop
-- Each player's individual move count is calculated:
-  X's moves = ceil(moveCount / 2)
-  O's moves = floor(moveCount / 2)
-- This tells us when a player transitions from placement to movement phase
+Tracking moves
+- got rid of the history array since we don't need time travel for this
+- added a moveCount integer to Game that increments on every valid move
+- xIsNext is just moveCount % 2 === 0
+- to figure out which phase each player is in, I calculate how many moves
+  they specifically have made:
+  X moves = Math.ceil(moveCount / 2)
+  O moves = Math.floor(moveCount / 2)
+- once a player hits 3 moves, they switch to movement phase
 
-Step 2: Splitting Placement vs Movement Phase
-- In handleClick, check if playerMoves < 3
-- If yes: placement phase, same as tic-tac-toe (click empty square to place)
-- If no: movement phase (need two clicks to move a piece)
+Placement vs movement
+- in handleClick, if the current player has < 3 pieces, it works like
+  normal tic-tac-toe — click an empty square, place your symbol
+- if they have 3 pieces, go to the movement logic instead
 
-Step 3: Implementing Two-Click Movement
-- Added selectedSquare state to Board (initially null)
-- First click in movement phase: player clicks one of their own pieces
-  - If the clicked square doesn't have the current player's piece, ignore
-  - Otherwise, set selectedSquare to that index
-- Second click: player clicks destination
-  - Reset selectedSquare to null immediately (for clean state)
-  - Check destination is empty
-  - Check destination is adjacent to the selected piece
-  - If checks pass, move the piece (clear old square, fill new square)
-  - If any check fails, the move is simply rejected
+Two-click movement
+- this was the trickiest part to get right
+- added a selectedSquare state variable to Board, starts as null
+- first click: player clicks one of their own pieces to select it
+  - if they click an empty square or the opponent's piece, nothing happens
+  - otherwise set selectedSquare to that index
+- second click: player clicks where they want to move
+  - immediately reset selectedSquare to null
+  - check that the destination is empty
+  - check that it's adjacent (wrote a helper for this)
+  - if valid, do the move. if not, just cancel the whole thing
+- at first I wasn't resetting selectedSquare before the checks, which caused
+  some weird behavior where invalid moves would leave a piece "stuck" as
+  selected. fixed by moving the null reset before validation
 
-Step 4: Writing the isAdjacent Helper Function
-- Convert square indices to row/col: row = floor(i/3), col = i % 3
-- Two squares are adjacent if both rowDiff <= 1 and colDiff <= 1
-  and they're not the same square (rowDiff + colDiff > 0)
-- This covers all 8 directions: up, down, left, right, and 4 diagonals
+isAdjacent helper
+- converts indices to row/col (row = Math.floor(i/3), col = i % 3)
+- adjacent means rowDiff <= 1 and colDiff <= 1, but not the same square
+- handles all 8 directions including diagonals
 
-Step 5: Implementing the Center Square Rule
-- After validating adjacency, check if current player has a piece in center (index 4)
-- If so, simulate the move on a copy of the board
-- Check two conditions:
-  1. Does the move vacate the center? (from === 4)
-  2. Does the move result in a win? (calculateWinner returns current player)
-- If neither condition is met, reject the move
-- This forces the player to either move their center piece or win
+Center square rule
+- if the current player has a piece on square 4 (center), their move has
+  to either:
+  1. vacate the center (i.e. from === 4), or
+  2. win the game
+- to check the win condition I create a copy of the board, apply the move
+  on the copy, and run calculateWinner on it
+- if neither condition is satisfied the move gets rejected
 
-Step 6: Preventing Moves After a Win
-- Added winner check at the very top of handleClick
-- If calculateWinner returns non-null, return immediately
-- No pieces can be placed or moved after someone wins
+Preventing moves after win
+- just check calculateWinner at the top of handleClick and return if
+  there's already a winner
+- this was already in the tic-tac-toe version so I just kept it
 
-Step 7: Removing Time Travel
-- Removed the history array and move list from Game
-- Game now only tracks current squares and moveCount
-- Board renders without the game-info sidebar
-- Per assignment spec, time travel is not required
-
-Step 8: Testing
-- Tested placement phase: first 6 moves place X and O alternately
-- Tested movement phase: clicking a piece then an adjacent empty square moves it
-- Tested invalid moves:
-  - Can't move to non-adjacent squares
-  - Can't move to occupied squares
-  - Can't move opponent's pieces
-  - Invalid second click resets selection
-- Tested center rule:
-  - With piece in center, must vacate center or win
-  - Moves that keep center piece without winning are blocked
-- Tested win detection works in movement phase
-- Tested no moves allowed after a winner is declared
-
-Additional tests written in test_chorus_lapilli.py:
-- test_no_moves_after_win: verifies clicking after a winner does nothing
-- test_movement_phase: verifies piece movement after 6 placements
-- test_invalid_placement: verifies can't place on occupied squares
-- test_center_rule: verifies center must be vacated or player must win
+Testing
+- played through a bunch of scenarios in the browser
+- placement phase works fine, same as tic-tac-toe for the first 6 moves
+- movement works: click your piece, click adjacent empty square, piece moves
+- tried clicking non-adjacent squares — correctly rejected
+- tried clicking occupied squares as destination — rejected
+- tried moving opponent's piece — doesn't let you
+- tested center rule: put O in center, then tried to move a different O piece
+  without winning — blocked. moving the center piece out works. winning move
+  from center also works.
+- wrote some tests in test_chorus_lapilli.py to check the main things
