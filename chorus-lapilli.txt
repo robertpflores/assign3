@@ -1,0 +1,82 @@
+Chorus Lapilli Lab Notebook
+===========================
+
+Overview:
+- Starting from the completed tic-tac-toe game in src/App.jsx
+- Modifying it to implement chorus lapilli rules:
+  1. After each player has placed 3 pieces, they must move existing pieces
+     to adjacent empty squares instead of placing new ones
+  2. If your piece is in the center and you have 3 pieces, you must either
+     win or move the center piece out
+
+Step 1: Tracking Move Count
+- Replaced the history-based state with a simple moveCount state in Game
+- xIsNext is derived from moveCount % 2 === 0
+- Passed moveCount down to Board as a prop
+- Each player's individual move count is calculated:
+  X's moves = ceil(moveCount / 2)
+  O's moves = floor(moveCount / 2)
+- This tells us when a player transitions from placement to movement phase
+
+Step 2: Splitting Placement vs Movement Phase
+- In handleClick, check if playerMoves < 3
+- If yes: placement phase, same as tic-tac-toe (click empty square to place)
+- If no: movement phase (need two clicks to move a piece)
+
+Step 3: Implementing Two-Click Movement
+- Added selectedSquare state to Board (initially null)
+- First click in movement phase: player clicks one of their own pieces
+  - If the clicked square doesn't have the current player's piece, ignore
+  - Otherwise, set selectedSquare to that index
+- Second click: player clicks destination
+  - Reset selectedSquare to null immediately (for clean state)
+  - Check destination is empty
+  - Check destination is adjacent to the selected piece
+  - If checks pass, move the piece (clear old square, fill new square)
+  - If any check fails, the move is simply rejected
+
+Step 4: Writing the isAdjacent Helper Function
+- Convert square indices to row/col: row = floor(i/3), col = i % 3
+- Two squares are adjacent if both rowDiff <= 1 and colDiff <= 1
+  and they're not the same square (rowDiff + colDiff > 0)
+- This covers all 8 directions: up, down, left, right, and 4 diagonals
+
+Step 5: Implementing the Center Square Rule
+- After validating adjacency, check if current player has a piece in center (index 4)
+- If so, simulate the move on a copy of the board
+- Check two conditions:
+  1. Does the move vacate the center? (from === 4)
+  2. Does the move result in a win? (calculateWinner returns current player)
+- If neither condition is met, reject the move
+- This forces the player to either move their center piece or win
+
+Step 6: Preventing Moves After a Win
+- Added winner check at the very top of handleClick
+- If calculateWinner returns non-null, return immediately
+- No pieces can be placed or moved after someone wins
+
+Step 7: Removing Time Travel
+- Removed the history array and move list from Game
+- Game now only tracks current squares and moveCount
+- Board renders without the game-info sidebar
+- Per assignment spec, time travel is not required
+
+Step 8: Testing
+- Tested placement phase: first 6 moves place X and O alternately
+- Tested movement phase: clicking a piece then an adjacent empty square moves it
+- Tested invalid moves:
+  - Can't move to non-adjacent squares
+  - Can't move to occupied squares
+  - Can't move opponent's pieces
+  - Invalid second click resets selection
+- Tested center rule:
+  - With piece in center, must vacate center or win
+  - Moves that keep center piece without winning are blocked
+- Tested win detection works in movement phase
+- Tested no moves allowed after a winner is declared
+
+Additional tests written in test_chorus_lapilli.py:
+- test_no_moves_after_win: verifies clicking after a winner does nothing
+- test_movement_phase: verifies piece movement after 6 placements
+- test_invalid_placement: verifies can't place on occupied squares
+- test_center_rule: verifies center must be vacated or player must win

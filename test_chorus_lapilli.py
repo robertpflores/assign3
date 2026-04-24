@@ -155,6 +155,79 @@ class TestChorusLapilli(unittest.TestCase):
         tiles[0].click()
         self.assertTileIs(tiles[0], self.SYMBOL_X)
 
+    def test_no_moves_after_win(self):
+        '''Check that no additional moves can be made after a player wins.'''
+        tiles = self.driver.find_elements(By.XPATH, self.BOARD_TILE_XPATH)
+        # X wins with top row: X at 0, 1, 2; O at 3, 4
+        tiles[0].click()  # X at 0
+        tiles[3].click()  # O at 3
+        tiles[1].click()  # X at 1
+        tiles[4].click()  # O at 4
+        tiles[2].click()  # X at 2, X wins
+
+        # try clicking an empty square after the game is over
+        tiles[5].click()
+        self.assertTileIs(tiles[5], self.SYMBOL_BLANK)
+        # the winning squares should remain unchanged
+        self.assertTileIs(tiles[0], self.SYMBOL_X)
+        self.assertTileIs(tiles[1], self.SYMBOL_X)
+        self.assertTileIs(tiles[2], self.SYMBOL_X)
+
+    def test_alternating_turns(self):
+        '''Check that X and O alternate turns correctly.'''
+        tiles = self.driver.find_elements(By.XPATH, self.BOARD_TILE_XPATH)
+        tiles[0].click()
+        self.assertTileIs(tiles[0], self.SYMBOL_X)
+        tiles[1].click()
+        self.assertTileIs(tiles[1], self.SYMBOL_O)
+        tiles[2].click()
+        self.assertTileIs(tiles[2], self.SYMBOL_X)
+
+    def test_invalid_placement_on_occupied(self):
+        '''Check that clicking an occupied square during placement does nothing.'''
+        tiles = self.driver.find_elements(By.XPATH, self.BOARD_TILE_XPATH)
+        tiles[0].click()  # X at 0
+        self.assertTileIs(tiles[0], self.SYMBOL_X)
+        tiles[0].click()  # try O at 0 (occupied)
+        # should still be X, not O
+        self.assertTileIs(tiles[0], self.SYMBOL_X)
+        # next move should still be O's turn
+        tiles[1].click()
+        self.assertTileIs(tiles[1], self.SYMBOL_O)
+
+    def test_movement_phase_basic(self):
+        '''Check that after 3 pieces each, a player can move a piece.'''
+        tiles = self.driver.find_elements(By.XPATH, self.BOARD_TILE_XPATH)
+        # place 3 X's and 3 O's
+        tiles[0].click()  # X at 0
+        tiles[3].click()  # O at 3
+        tiles[1].click()  # X at 1
+        tiles[4].click()  # O at 4
+        tiles[8].click()  # X at 8
+        tiles[6].click()  # O at 6
+
+        # now X should move: select piece at 1, move to 2
+        tiles[1].click()  # select X at 1
+        tiles[2].click()  # move to 2 (adjacent, empty)
+        self.assertTileIs(tiles[1], self.SYMBOL_BLANK)
+        self.assertTileIs(tiles[2], self.SYMBOL_X)
+
+    def test_cannot_place_after_three(self):
+        '''Check that after placing 3 pieces, clicking empty square without
+        selecting a piece first does not place a new piece.'''
+        tiles = self.driver.find_elements(By.XPATH, self.BOARD_TILE_XPATH)
+        tiles[0].click()  # X at 0
+        tiles[3].click()  # O at 3
+        tiles[1].click()  # X at 1
+        tiles[4].click()  # O at 4
+        tiles[8].click()  # X at 8
+        tiles[6].click()  # O at 6
+
+        # X's turn in movement phase, clicking empty square 5
+        tiles[5].click()
+        # square 5 should still be empty (can't place new piece)
+        self.assertTileIs(tiles[5], self.SYMBOL_BLANK)
+
 
 # ================= [DO NOT MAKE ANY CHANGES BELOW THIS LINE] =================
 

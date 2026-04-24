@@ -1,0 +1,59 @@
+Tic-Tac-Toe Lab Notebook
+========================
+
+Setup:
+- Cloned the starter code from https://github.com/UCLA-CS-35L/assign3
+- Ran ./helper init to set up the environment
+- Ran npm install to install dependencies (React 19, Vite, react-bootstrap)
+- Ran npm run dev to start the Vite dev server on localhost:5173
+- Opened the app in Chrome; saw the starter Hello World card component
+
+Step 1: Building the Board
+- Opened src/App.jsx, removed the starter Card/Badge/Button code
+- Created a Square component that returns a button with className="square"
+- Wrapped 9 Square components in 3 divs with className="board-row"
+- Gave each square a number 1-9 to verify layout
+- Result: a 3x3 grid appeared in the browser
+
+Step 2: Making Squares Interactive
+- Added a value prop to Square so the Board can pass data down
+- Changed Square to display {value} inside the button
+- Added onClick handler to Square using onSquareClick prop
+- Used useState inside Board to track 9 squares (array of nulls)
+- Each click calls handleClick(i) which sets the square to 'X'
+- Result: clicking any square places an X in it
+
+Step 3: Taking Turns
+- Added xIsNext state (boolean) to track whose turn it is
+- handleClick now places 'X' or 'O' depending on xIsNext
+- After each click, xIsNext flips
+- Added early return in handleClick if square already filled
+- Result: X and O alternate when clicking squares
+
+Step 4: Declaring a Winner
+- Wrote calculateWinner function that checks all 8 winning lines:
+  rows (0,1,2), (3,4,5), (6,7,8)
+  cols (0,3,6), (1,4,7), (2,5,8)
+  diags (0,4,8), (2,4,6)
+- Added winner check at top of handleClick to block moves after a win
+- Added status text above the board showing either "Winner: X/O" or
+  "Next player: X/O"
+- Result: game correctly detects wins and prevents further play
+
+Step 5: Lifting State Up
+- Moved squares state and xIsNext from Board into a parent Game component
+- Board now receives squares, xIsNext, and onPlay as props
+- Game passes handlePlay to Board which updates the history
+- Result: same behavior, but state management is cleaner
+
+Step 6: Showing Game Status
+- Game component renders Board inside a div with className="game"
+- Status message displays above the board
+- The game is fully functional tic-tac-toe at this point
+
+Testing:
+- Verified X always goes first
+- Verified alternating turns
+- Verified can't click on occupied squares
+- Verified all 8 winning lines work
+- Verified no more moves after a winner
